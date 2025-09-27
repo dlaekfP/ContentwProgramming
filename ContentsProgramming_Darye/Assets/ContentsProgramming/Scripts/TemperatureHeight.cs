@@ -12,11 +12,18 @@ public class TemperatureHeight : MonoBehaviour
     {
         myTransform = GetComponent<Transform>();
         float height = (temperature / 50.0f) * maxHeight;
-        
+
         // Y축(세로) 크기만 변경
         transform.localScale = new Vector3(1, height, 1);
-        
+
         // 결과 출력
         Debug.Log("온도 " + temperature + "도 → 높이 " + height);
     }
+    
+    void Update()
+{
+    // 매 프레임마다 실행 (초당 60번)
+    float height = (temperature / 50.0f) * maxHeight;
+    transform.localScale = new Vector3(1, height, 1);
+}
 }
