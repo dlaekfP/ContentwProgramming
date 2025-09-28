@@ -6,23 +6,43 @@ public class TemperatureColor : MonoBehaviour
     public Color coldColor = Color.blue;
     public Color normalColor = Color.green;
     public Color hotColor = Color.red;
+    private Renderer myRenderer;
     void Start()
     {
-        Renderer renderer = GetComponent<Renderer>();
+        myRenderer = GetComponent<Renderer>();
 
         if (temperature < 15.0f)
         {
-            renderer.material.color = coldColor;
+            myRenderer.material.color = coldColor;
             Debug.Log(temperature + "도: 차가워요! (파란색)");
         }
-        else if (temperature < 30.0f)
+        else if (temperature < 25.0f)
         {
-            renderer.material.color = normalColor;
+            myRenderer.material.color = normalColor;
             Debug.Log(temperature + "도: 적당해요! (녹색)");
         }
         else
         {
-            renderer.material.color = hotColor;
+            myRenderer.material.color = hotColor;
+            Debug.Log(temperature + "도: 뜨거워요! (빨간색)");
+        }
+    }
+
+    void Update()
+    {
+         if (temperature < 15.0f)
+        {
+            myRenderer.material.color = coldColor;
+            Debug.Log(temperature + "도: 차가워요! (파란색)");
+        }
+        else if (temperature < 25.0f)
+        {
+            myRenderer.material.color = normalColor;
+            Debug.Log(temperature + "도: 적당해요! (녹색)");
+        }
+        else
+        {
+            myRenderer.material.color = hotColor;
             Debug.Log(temperature + "도: 뜨거워요! (빨간색)");
         }
     }
