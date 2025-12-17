@@ -1,101 +1,261 @@
 using UnityEngine;
-using UnityEngine.UI; 
-using System.Linq; 
-using TMPro; // TextMeshPro 텍스트 컴포넌트를 사용하기 위해 필요
+using UnityEngine.UI;
+using TMPro;
+using DG.Tweening;
 
 public class Graph : MonoBehaviour
 {
-    // --- 1. 그래프 UI 참조 ---
-    public Image ClassicLikeGraph;
-    public Image ClassiceHateGraph;
-    public Image POPLikeGraph;
-    public Image POPHateGraph;
+    [Header("=== Main Groups ===")]
+    public GameObject LikeGraph;
+    public GameObject HateGraph;
+    public GameObject[] WhyGroups;   // Why1~Why4
 
-    // --- 2. 텍스트 UI 참조 ---
-    public TextMeshProUGUI ClassicLikeText;
-    public TextMeshProUGUI ClassiceHateText;
-    public TextMeshProUGUI POPLikeText;
-    public TextMeshProUGUI POPHateText;
+    [Header("=== Why Title ===")]
+    public GameObject WhyTitle;
 
+    [Header("=== End Groups ===")]
+    public GameObject EndGroup;
+    public GameObject Summary;
+    public GameObject Problem;
+    public GameObject Way;
+
+    [Header("=== Text Group ===")]
+    public GameObject TextGroup;
+
+    [Header("=== Like / Hate ===")]
+    public Image classicLikeFill;
+    public Image popLikeFill;
+    public Image classicHateFill;
+    public Image popHateFill;
+
+    public TextMeshProUGUI classicLikeText;
+    public TextMeshProUGUI popLikeText;
+    public TextMeshProUGUI classicHateText;
+    public TextMeshProUGUI popHateText;
+
+    [Header("=== Why Data ===")]
+    public Image[] WhyFills;
+    public TextMeshProUGUI[] WhyPercents;
+
+    [Header("=== Animation ===")]
+    public float duration = 1.2f;
+    public Ease ease = Ease.OutQuart;
+
+    int step = 0;
+    bool isLocked = false;   // ⭐ 핵심 가드
+
+    // ================= START =================
 
     void Start()
     {
-        if (Csv.Instance == null)
+        InitAll();
+        ShowLike(); // ⭐ 최초 1회만
+    }
+
+    // ================= Init =================
+
+    void InitAll()
+    {
+        LikeGraph.SetActive(false);
+        HateGraph.SetActive(false);
+
+        foreach (var w in WhyGroups)
+            w.SetActive(false);
+
+        EndGroup.SetActive(false);
+        Summary.SetActive(false);
+        Problem.SetActive(false);
+        Way.SetActive(false);
+
+        TextGroup.SetActive(true);
+        WhyTitle.SetActive(false);
+
+        step = 0;
+        isLocked = false;
+    }
+
+    // ================= Button =================
+
+    public void OnNextButton()
+    {
+        if (isLocked) return;   // ⭐ 중복 클릭 방지
+        isLocked = true;
+
+        step++;
+        Debug.Log("STEP = " + step);
+
+        switch (step)
         {
-            Debug.LogError("CsvDataParser (Singleton)가 씬에 없습니다! 스크립트가 붙은 오브젝트를 확인하세요.");
+            case 1:
+                ShowHate();
+                break;
+
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+                ShowWhy(step - 2);
+                break;
+
+            case 6:
+                ShowSummary();
+                break;
+
+            case 7:
+                ShowProblem();
+                break;
+
+            case 8:
+                ShowWay();
+                break;
+        }
+
+        // 애니메이션 끝나면 다시 입력 허용
+        Invoke(nameof(Unlock), 0.3f);
+    }
+
+    void Unlock()
+    {
+        isLocked = false;
+    }
+
+    // ================= Like =================
+
+    void ShowLike()
+    {
+        LikeGraph.SetActive(true);
+        HateGraph.SetActive(false);
+
+        WhyTitle.SetActive(false);
+
+        StartTween(classicLikeFill, classicLikeText, GetPercent("있다", true));
+        StartTween(popLikeFill, popLikeText, GetPercent("있다", false));
+    }
+
+    // ================= Hate =================
+
+    void ShowHate()
+    {
+        LikeGraph.SetActive(false);
+        HateGraph.SetActive(true);
+
+        WhyTitle.SetActive(false);
+
+        StartTween(classicHateFill, classicHateText, GetPercent("없다", true));
+        StartTween(popHateFill, popHateText, GetPercent("없다", false));
+    }
+
+    // ================= Why =================
+
+    void ShowWhy(int index)
+    {
+        HateGraph.SetActive(false);
+        TextGroup.SetActive(false);
+
+        WhyTitle.SetActive(true);
+
+        for (int i = 0; i < WhyGroups.Length; i++)
+            WhyGroups[i].SetActive(false);
+
+        WhyGroups[index].SetActive(true);
+
+        AnimateWhy(index * 2);
+        AnimateWhy(index * 2 + 1);
+    }
+
+    void AnimateWhy(int i)
+    {
+        if (i >= WhyFills.Length ||
+            i >= WhyPercents.Length ||
+            i >= Csv.Instance.BarrierData.Count)
             return;
-        }
 
-        // 1. 파싱된 데이터로 그래프와 텍스트를 채웁니다.
-        FillGraphsAndTexts();
-        
-        // 2. 초기 상태: Like Graph(있다)만 보이게 설정 (false 전달)
-        // SetGraphVisibility(true) -> Hate 먼저
-        // SetGraphVisibility(false) -> Like 먼저 (수정됨)
-        SetGraphVisibility(false); 
+        WhyFills[i].fillAmount = 0;
+        WhyPercents[i].text = "0%";
+
+        StartTween(
+            WhyFills[i],
+            WhyPercents[i],
+            Csv.Instance.BarrierData[i].Percentage
+        );
     }
 
-    /// <summary>
-    /// 버튼에 연결하여 그래프의 시각적 상태를 전환합니다. (Like -> Hate 로 전환)
-    /// </summary>
-    public void ToggleToHateGraph() // <--- 함수 이름 변경 (버튼 이벤트 재연결 필요)
+    // ================= End =================
+
+    void ShowSummary()
     {
-        // Hate 그래프를 보이게 설정 (true 전달)
-        SetGraphVisibility(true); 
-    }
-    
-    /// <summary>
-    /// 그래프의 보이는 상태를 설정합니다.
-    /// (텍스트 컴포넌트가 Image 컴포넌트의 자식이라고 가정합니다.)
-    /// </summary>
-    private void SetGraphVisibility(bool showHate)
-    {
-        // Image의 SetActive()만 호출합니다.
-        
-        // Hate Graph (Image) 토글
-        ClassiceHateGraph.gameObject.SetActive(showHate);
-        POPHateGraph.gameObject.SetActive(showHate);
-        
-        // Like Graph (Image) 토글
-        ClassicLikeGraph.gameObject.SetActive(!showHate);
-        POPLikeGraph.gameObject.SetActive(!showHate);
-        
-        Debug.Log(showHate ? "Hate Graph가 표시되었습니다." : "Like Graph가 표시되었습니다.");
+        HideWhy();
+
+        TextGroup.SetActive(true);
+        EndGroup.SetActive(true);
+
+        Summary.SetActive(true);
+        Problem.SetActive(false);
+        Way.SetActive(false);
+
+        ForceVisible(Summary);
     }
 
-    /// <summary>
-    /// 파싱된 데이터를 사용하여 UI Image의 Fill Amount와 Text를 설정합니다.
-    /// </summary>
-    private void FillGraphsAndTexts()
+    void ShowProblem()
     {
-        var parser = Csv.Instance;
+        TextGroup.SetActive(true);
 
-        if (parser.ClassicalIntentionData.Count < 2 || parser.PopIntentionData.Count < 2) 
-        {
-             Debug.LogWarning("필요한 데이터(있다/없다)가 부족합니다.");
-             return;
-        }
+        Summary.SetActive(false);
+        Problem.SetActive(true);
+        Way.SetActive(false);
 
-        // --- 클래식 의향 데이터 처리 ---
-        var classicLikeData = parser.ClassicalIntentionData.Find(d => d.ItemName.Contains("있다"));
-        var classicHateData = parser.ClassicalIntentionData.Find(d => d.ItemName.Contains("없다"));
-        
-        ClassicLikeGraph.fillAmount = classicLikeData.Percentage / 100f;
-        ClassiceHateGraph.fillAmount = classicHateData.Percentage / 100f;
-        ClassicLikeText.text = $"{classicLikeData.Percentage:F1}%";
-        ClassiceHateText.text = $"{classicHateData.Percentage:F1}%";
+        ForceVisible(Problem);
+    }
 
+    void ShowWay()
+    {
+        TextGroup.SetActive(true);
 
-        // --- 대중음악 의향 데이터 처리 ---
-        var popLikeData = parser.PopIntentionData.Find(d => d.ItemName.Contains("있다"));
-        var popHateData = parser.PopIntentionData.Find(d => d.ItemName.Contains("없다"));
+        Summary.SetActive(false);
+        Problem.SetActive(false);
+        Way.SetActive(true);
 
-        POPLikeGraph.fillAmount = popLikeData.Percentage / 100f;
-        POPHateGraph.fillAmount = popHateData.Percentage / 100f;
-        POPLikeText.text = $"{popLikeData.Percentage:F1}%";
-        POPHateText.text = $"{popHateData.Percentage:F1}%";
-        
-        // UI 업데이트 강제화
-        Canvas.ForceUpdateCanvases();
+        ForceVisible(Way);
+    }
+
+    // ================= Utils =================
+
+    void HideWhy()
+    {
+        WhyTitle.SetActive(false);
+
+        foreach (var w in WhyGroups)
+            w.SetActive(false);
+    }
+
+    void ForceVisible(GameObject obj)
+    {
+        CanvasGroup cg = obj.GetComponent<CanvasGroup>();
+        if (cg == null) cg = obj.AddComponent<CanvasGroup>();
+
+        cg.alpha = 1f;
+        cg.interactable = true;
+        cg.blocksRaycasts = true;
+    }
+
+    void StartTween(Image img, TextMeshProUGUI txt, float percent)
+    {
+        img.fillAmount = 0;
+        txt.text = "0%";
+
+        img.DOFillAmount(percent / 100f, duration).SetEase(ease);
+
+        float val = 0;
+        DOTween.To(() => val, x => val = x, percent, duration)
+            .OnUpdate(() => txt.text = $"{val:F1}%");
+    }
+
+    float GetPercent(string key, bool classic)
+    {
+        var list = classic
+            ? Csv.Instance.ClassicalIntentionData
+            : Csv.Instance.PopIntentionData;
+
+        return list.Find(d => d.ItemName.Contains(key)).Percentage;
     }
 }
