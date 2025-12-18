@@ -367,7 +367,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC65C \uC7AC\uAD00\uB78C \uC758\uC0AC\uAC00 \uB0AE\uC740 \uAC83\uC778\uAC00?"
+  m_text: "\uC65C \uD074\uB798\uC2DD \uC120\uD638\uB3C4\uAC00 \uB0AE\uC740 \uAC83\uC778\uAC00?"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 4b9441713d3e4884cbed07be729289b5, type: 2}
   m_sharedMaterial: {fileID: 1868443987853386154, guid: 4b9441713d3e4884cbed07be729289b5, type: 2}
@@ -2485,7 +2485,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 100, y: 0}
+  m_AnchoredPosition: {x: 45, y: 0}
   m_SizeDelta: {x: 1500, y: 1000}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &631384230
@@ -6920,8 +6920,8 @@ RectTransform:
   m_Children:
   - {fileID: 567786329}
   - {fileID: 1234643736}
-  - {fileID: 1409611001}
   - {fileID: 61847631}
+  - {fileID: 1409611001}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}

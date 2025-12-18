@@ -186,7 +186,7 @@ public class Graph : MonoBehaviour
     {
         HideWhy();
 
-        TextGroup.SetActive(true);
+        TextGroup.SetActive(false);
         EndGroup.SetActive(true);
 
         Summary.SetActive(true);
@@ -194,28 +194,31 @@ public class Graph : MonoBehaviour
         Way.SetActive(false);
 
         ForceVisible(Summary);
+        SlideInFromRight(Summary);
     }
 
     void ShowProblem()
     {
-        TextGroup.SetActive(true);
+        TextGroup.SetActive(false);
 
         Summary.SetActive(false);
         Problem.SetActive(true);
         Way.SetActive(false);
 
         ForceVisible(Problem);
+        SlideInFromRight(Problem);
     }
 
     void ShowWay()
     {
-        TextGroup.SetActive(true);
+        TextGroup.SetActive(false);
 
         Summary.SetActive(false);
         Problem.SetActive(false);
         Way.SetActive(true);
 
         ForceVisible(Way);
+        SlideInFromRight(Way);
     }
 
     // ================= Utils =================
@@ -258,4 +261,19 @@ public class Graph : MonoBehaviour
 
         return list.Find(d => d.ItemName.Contains(key)).Percentage;
     }
+
+    void SlideInFromRight(GameObject obj)
+{
+    RectTransform rt = obj.GetComponent<RectTransform>();
+    if (rt == null) return;
+
+    float endX = rt.anchoredPosition.x;
+    float startX = endX + 800f;   // 👉 오른쪽에서 시작 (필요하면 값 조절)
+
+    rt.anchoredPosition = new Vector2(startX, rt.anchoredPosition.y);
+
+    rt.DOAnchorPosX(endX, duration)
+      .SetEase(ease);
+}
+
 }
